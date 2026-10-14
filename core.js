@@ -53,3 +53,23 @@ export function verifyPDF(bytes,marks){
   }
  }finally{doc.destroy();}
 }
+// MuPDF normalises whitespace and matches without case sensitivity.
+export function searchPDF(doc,query){
+ query=query.trim();if(!query)throw Error('Enter text to search.');
+ const matches=[];let limited=false;
+ for(let i=0;i<doc.countPages();i++){
+  const page=doc.loadPage(i);
+  try{
+   const b=page.getBounds(),text=page.toStructuredText('');
+   try{
+    const hits=text.search(query,'ignore-case');
+    if(hits.reduce((n,h)=>n+h.length,0)>=500)limited=true;
+    for(const quads of hits){
+     const rects=quads.map(q=>{let r=quadRect(q);r=[Math.max(b[0],r[0]-2),Math.max(b[1],r[1]-2),Math.min(b[2],r[2]+2),Math.min(b[3],r[3]+2)];if(r[2]-r[0]<5)r[2]=Math.min(b[2],r[0]+5);if(r[3]-r[1]<5)r[3]=Math.min(b[3],r[1]+5);return r;});
+     matches.push({page:i,rects,key:JSON.stringify([i,rects])});
+    }
+   }finally{text.destroy();}
+  }finally{page.destroy();}
+ }
+ return {matches,limited};
+}

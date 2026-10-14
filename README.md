@@ -1,14 +1,14 @@
-# PixelSeal Web 0.1.0
+# PixelSeal Web 0.2.0
 
-PixelSeal Web is a local browser prototype for manual PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
+PixelSeal Web is a local browser prototype for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
 This is a separate prototype, not a full migration of PixelSeal 0.8.1. The original Python source was unavailable in this workspace.
 
 ## Website
 
-Intended GitHub Pages address: https://kengbeng.github.io/pixelseal-web/
+GitHub Pages address: https://kengbeng.github.io/pixelseal-web/
 
-Once deployed, open this address and select a PDF. No Python installation or local server is required for the hosted version. The browser downloads application assets from GitHub Pages; PDF bytes are processed locally and are not uploaded. This version does not install an offline service worker, so an initial internet connection is required.
+Open this address and select a PDF. No Python installation or local server is required for the hosted version. The browser downloads application assets from GitHub Pages; PDF bytes are processed locally and are not uploaded. This version does not install an offline service worker, so an initial internet connection is required.
 
 ## Publish on GitHub Pages
 
@@ -33,9 +33,11 @@ The server binds only to this computer. It serves bundled assets and has no PDF 
 
 1. Select **Open PDF** and choose a local document.
 2. Drag a box around sensitive content. Include a small margin around text. Boxes must be at least 5 PDF points wide and tall.
-3. Navigate through pages and add further boxes. Click a box or its **Remove** button to delete it. **Undo last mark** removes the most recent mark across all pages.
-4. Select **Verify & download PDF**.
-5. Open the downloaded copy and review it before sharing. The preview continues to show the source document with proposed marks.
+3. Use **Find sensitive text** to search across all pages. Search is case-insensitive and normalises whitespace. Select **Show** to review a match on its page, tick the matches to redact, then select **Mark selected matches**. Nothing is selected automatically. Search results are limited to 500 highlight regions per page; an explicit message appears if that limit is reached. Scanned pages without selectable text require OCR and are not searchable.
+4. Drag an existing box to move it. Select a box and drag its corner handles to resize, or enter X, Y, Width and Height and select **Apply dimensions**. Coordinates are in PDF points.
+5. Use **Undo** and **Redo** for drawing, batch marking, moving, resizing, removal and clearing. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Focus the page overlay and use arrow keys to move the selected box; Shift moves ten points. Delete removes the selected box. Escape deselects it.
+6. Select **Verify & download PDF**.
+7. Open the downloaded copy and review it before sharing. The preview continues to show the source document with proposed marks.
 
 The original file is never overwritten. Marks are held in browser memory and are lost when the page is refreshed or another PDF is opened.
 
@@ -49,13 +51,13 @@ Interactive forms are rejected during export. Flatten forms before using this pr
 
 ## Current scope
 
-Included: local file opening, manual redaction, page navigation, zoom, removal and undo of marks, searchable export, export verification, a worker for PDF processing, and bundled MuPDF.js.
+Included: local file opening, manual redaction, document text search with reviewed match selection, editable boxes, undo/redo, page navigation, zoom, searchable export, export verification, a worker for PDF processing, and bundled MuPDF.js.
 
-Not included: text search, OCR, automatic detection, image-only export, persistent sessions, PWA installation, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and mobile devices have not been validated.
+Not included: OCR, automatic detection, image-only export, persistent sessions, PWA installation, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and mobile devices have not been validated.
 
 ## Checks completed
 
-Run `node tests.mjs` with Node.js to repeat the engine checks. Tests create temporary fixtures in `../../work/qa/` relative to this project.
+Run `npm test` (or `node tests.mjs` followed by `node features-tests.mjs`) with Node.js to repeat the engine checks. Tests create temporary fixtures in `../../work/qa/` relative to this project.
 
 - Text removal and retention of unaffected searchable text.
 - Pages rotated at 0, 90, 180 and 270 degrees.
@@ -76,3 +78,7 @@ MuPDF is available under AGPL or a commercial licence from Artifex. Distribution
 
 Official documentation: https://mupdf.readthedocs.io/en/latest/guide/using-with-javascript.html
 Licensing: https://mupdf.readthedocs.io/en/latest/license.html
+
+## Version 0.2.0 validation
+
+Search-to-export tests cover all four page rotations and case-insensitive matching. State tests cover undo/redo of edits and clearing, redo invalidation after a new edit, independent history snapshots, movement clamping, and minimum-size resizing. Existing export regression checks remain in place.
