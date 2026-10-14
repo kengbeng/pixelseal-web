@@ -1,8 +1,8 @@
 # PixelSeal Web 0.2.2
 
-PixelSeal Web is a local browser prototype for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
+PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
-This is a separate prototype, not a full migration of PixelSeal 0.8.1. The original Python source was unavailable in this workspace.
+This is a separate web app, not a full migration of PixelSeal 0.8.1. The original Python source was unavailable in this workspace.
 
 ## Website
 
@@ -47,7 +47,7 @@ The engine applies permanent redactions to text, covered image pixels, and graph
 
 After saving, the app reopens the resulting bytes. It checks each marked region for non-whitespace text and checks the interior rendered pixels for a black fill. It blocks download if these checks fail. These checks are limited to marked areas and do not constitute a complete PDF security audit. Shared resources, unusual PDF structures and unmarked sensitive content need further validation before a production release.
 
-Interactive forms are rejected during export. Flatten forms before using this prototype. PDFs with signatures should be treated as unsigned output because the original document is rebuilt. Password-protected documents can be opened with their password; output is not encrypted.
+Interactive forms are rejected during export. Flatten forms before using PixelSeal. PDFs with signatures should be treated as unsigned output because the original document is rebuilt. Password-protected documents can be opened with their password; output is not encrypted.
 
 ## Current scope
 
@@ -68,7 +68,7 @@ Run `npm test` (or `node tests.mjs` followed by `node features-tests.mjs` then `
 - Browser workflow: file opening, dragging a box, page navigation and verified PDF download.
 - Independent reopening of the browser download and visual inspection of the rendered engine output.
 
-This is a prototype with meaningful regression checks, not a production-certified redaction system.
+The app has regression checks; it has not been independently certified as a redaction system.
 
 ## Licensing and dependencies
 
