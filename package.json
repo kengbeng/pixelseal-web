@@ -1,0 +1,1 @@
+{"name":"pixelseal-web","version":"0.1.0","type":"module","private":true,"license":"AGPL-3.0-or-later","scripts":{"start":"python3 serve.py","test":"node tests.mjs"}}

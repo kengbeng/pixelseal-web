@@ -1,0 +1,78 @@
+# PixelSeal Web 0.1.0
+
+PixelSeal Web is a local browser prototype for manual PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
+
+This is a separate prototype, not a full migration of PixelSeal 0.8.1. The original Python source was unavailable in this workspace.
+
+## Website
+
+Intended GitHub Pages address: https://kengbeng.github.io/pixelseal-web/
+
+Once deployed, open this address and select a PDF. No Python installation or local server is required for the hosted version. The browser downloads application assets from GitHub Pages; PDF bytes are processed locally and are not uploaded. This version does not install an offline service worker, so an initial internet connection is required.
+
+## Publish on GitHub Pages
+
+1. Create the public repository `kengbeng/pixelseal-web`.
+2. Upload the contents of this folder to the repository root, preserving `vendor/`. Do not upload test PDFs or personal documents.
+3. Open Settings > Pages. Under Build and deployment, choose Deploy from a branch, then select main and /(root). Save.
+4. Wait for the Pages deployment to finish and open the website address above. Test opening, marking and exporting a PDF.
+
+The empty `.nojekyll` file disables Jekyll processing. Paths are relative so the app runs under `/pixelseal-web/`. The app licence and MuPDF licence remain in the deployed source.
+
+## Start locally
+
+1. Extract the complete folder. Keep `vendor/` beside `index.html`.
+2. Install Python 3 if it is not already available.
+3. On macOS, run `Start-PixelSeal.command`, or open Terminal in this folder and run `python3 serve.py`. On Windows, run `Start-PixelSeal.bat`, or run `py -3 serve.py` in this folder.
+4. Open http://127.0.0.1:8765 if the browser does not open automatically.
+5. Keep the launcher running while using the app. Press Ctrl+C in its terminal to stop.
+
+The server binds only to this computer. It serves bundled assets and has no PDF upload endpoint. Browser worker modules and WebAssembly need a local HTTP server; double-clicking `index.html` is not the supported launch method. This is an HTML application folder, not a single HTML file. Python is only used to serve the files; all PDF processing runs in the browser.
+
+## Use
+
+1. Select **Open PDF** and choose a local document.
+2. Drag a box around sensitive content. Include a small margin around text. Boxes must be at least 5 PDF points wide and tall.
+3. Navigate through pages and add further boxes. Click a box or its **Remove** button to delete it. **Undo last mark** removes the most recent mark across all pages.
+4. Select **Verify & download PDF**.
+5. Open the downloaded copy and review it before sharing. The preview continues to show the source document with proposed marks.
+
+The original file is never overwritten. Marks are held in browser memory and are lost when the page is refreshed or another PDF is opened.
+
+## Export behaviour
+
+The engine applies permanent redactions to text, covered image pixels, and graphics touched by a marked area. It builds a fresh PDF by grafting the processed pages, removes annotations and selected page-level auxiliary data, and saves with garbage collection and compression. Document-level metadata, attachments, bookmarks, and signatures are not copied. Searchable text outside the marked regions is retained.
+
+After saving, the app reopens the resulting bytes. It checks each marked region for non-whitespace text and checks the interior rendered pixels for a black fill. It blocks download if these checks fail. These checks are limited to marked areas and do not constitute a complete PDF security audit. Shared resources, unusual PDF structures and unmarked sensitive content need further validation before a production release.
+
+Interactive forms are rejected during export. Flatten forms before using this prototype. PDFs with signatures should be treated as unsigned output because the original document is rebuilt. Password-protected documents can be opened with their password; output is not encrypted.
+
+## Current scope
+
+Included: local file opening, manual redaction, page navigation, zoom, removal and undo of marks, searchable export, export verification, a worker for PDF processing, and bundled MuPDF.js.
+
+Not included: text search, OCR, automatic detection, image-only export, persistent sessions, PWA installation, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and mobile devices have not been validated.
+
+## Checks completed
+
+Run `node tests.mjs` with Node.js to repeat the engine checks. Tests create temporary fixtures in `../../work/qa/` relative to this project.
+
+- Text removal and retention of unaffected searchable text.
+- Pages rotated at 0, 90, 180 and 270 degrees.
+- Rejection of unredacted text by the verifier.
+- Rejection of missing marks and invalid page coordinates.
+- Removal of test metadata, attachments and private comments.
+- Actual embedded image pixel changes under a marked region.
+- Browser workflow: file opening, dragging a box, page navigation and verified PDF download.
+- Independent reopening of the browser download and visual inspection of the rendered engine output.
+
+This is a prototype with meaningful regression checks, not a production-certified redaction system.
+
+## Licensing and dependencies
+
+MuPDF.js 1.28.1 is bundled in `vendor/`, downloaded from the npm `mupdf` package. Its licence is provided in `vendor/LICENSE`. The app source is provided under AGPL-3.0-or-later; see `LICENSE`.
+
+MuPDF is available under AGPL or a commercial licence from Artifex. Distribution or organisational deployment must comply with the applicable terms. Do not remove licence files when sharing the application.
+
+Official documentation: https://mupdf.readthedocs.io/en/latest/guide/using-with-javascript.html
+Licensing: https://mupdf.readthedocs.io/en/latest/license.html
