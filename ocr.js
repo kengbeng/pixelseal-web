@@ -1,6 +1,6 @@
 import Tesseract from './vendor/ocr/tesseract.esm.min.js';
 const {createWorker}=Tesseract;
-import {wordsFromBlocks} from './ocr-model.js?v=0.4.0';
+import {wordsFromBlocks} from './ocr-model.js?v=0.5.0';
 export class OCRController {
  constructor(){this.pages=new Map();this.settings=new Map();this.run=null;}
  reset(){this.cancel();this.pages.clear();this.settings.clear();}

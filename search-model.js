@@ -1,4 +1,4 @@
-import {searchOCRPages} from './ocr-model.js?v=0.4.0';
+import {searchOCRPages} from './ocr-model.js?v=0.5.0';
 export function patternRegex(mode,value=''){
  if(mode==='email')return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
  if(mode==='phone')return /(?:\+\d{1,3}[ .-]?)?(?:\(\d{2,4}\)[ .-]?)?(?:\d[ .-]?){7,14}\d/g;

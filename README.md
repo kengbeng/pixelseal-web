@@ -1,4 +1,4 @@
-# PixelSeal Web 0.4.0
+# PixelSeal Web 0.5.0
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -33,10 +33,10 @@ The server binds only to this computer. It serves bundled assets and has no PDF 
 
 1. Select **Open PDF** and choose a local document.
 2. Drag a box around sensitive content. Include a small margin around text. Boxes must be at least 5 PDF points wide and tall.
-3. Use **Find text and patterns**. Enter a word or phrase, or choose email addresses, phone numbers or a custom pattern. **Include scanned text** is on by default. PDF text matches appear first; OCR matches arrive as pages finish. Under **Scan options**, choose English or simplified Chinese, processing rotation, and page scope. The default recognises pages without selectable text. Use **Scan all pages** for mixed text/image pages. Completed scans are reused for the same document, language and rotation. **Cancel scan** retains completed results and labels the search incomplete. Review **Show** matches, tick the desired matches and select **Mark selected matches**. **Select current matches** selects only matches already present; incoming results are unchecked. Nothing is selected automatically. Results are capped at 500 matches/highlight regions per page; a warning appears if results may be incomplete.
+3. Use **Find text and patterns**. Enter a word or phrase, or choose email addresses, phone numbers or a custom pattern. **Include scanned text** is on by default. PDF text matches appear first; OCR matches arrive as pages finish. Under **Scan options**, choose English or simplified Chinese, processing rotation, and page scope. The default recognises pages without selectable text. Use **Scan all pages** for mixed text/image pages. Completed scans are reused for the same document, language and rotation. **Cancel scan** retains completed results and labels the search incomplete. Click a match to locate and highlight it, tick the desired matches and select **Mark selected matches**. **Select current matches** selects only matches already present; incoming results are unchecked. Nothing is selected automatically. Results are capped at 500 matches/highlight regions per page; a warning appears if results may be incomplete.
 4. Drag an existing box to move it. Select a box and drag its corner handles to resize, or enter X, Y, Width and Height and select **Apply dimensions**. Coordinates are in PDF points.
 5. Use **Undo** and **Redo** for drawing, batch marking, moving, resizing, removal and clearing. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Focus the page overlay and use arrow keys to move the selected box; Shift moves ten points. Delete removes the selected box. Escape deselects it.
-6. Select **Verify & preview PDF**. Review the actual exported pages using thumbnails and marked-area jumps. Check **I have reviewed this exported page** to track your confirmation, then select **Download redacted PDF**.
+6. Select **Review & export**. Review the actual exported pages using thumbnails and marked-area jumps. Check **I have reviewed this exported page** to track your confirmation, then select **Download PDF**.
 7. Open the downloaded copy and review it before sharing. The preview continues to show the source document with proposed marks.
 
 The original file is never overwritten. Marks are held in browser memory and are lost when the page is refreshed or another PDF is opened.
@@ -53,7 +53,7 @@ Interactive forms are rejected during export. Flatten forms before using PixelSe
 
 Included: local file opening, manual redaction, document text search with reviewed match selection, editable boxes, undo/redo, page navigation, zoom, searchable export, export verification, a worker for PDF processing, bundled MuPDF.js, English and simplified Chinese OCR, offline caching and web app installation.
 
-Not included: automatic detection, image-only export, persistent sessions, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and mobile devices have not been validated.
+Not included: fully automatic redaction, image-only export, persistent sessions, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and physical mobile devices have not been validated; responsive layouts were checked in the in-app browser.
 
 ## Checks completed
 
@@ -114,3 +114,15 @@ Email and phone patterns are suggestions, not a guarantee of identifying every s
 Source and export thumbnails load on demand and show marked-area counts. Exported-page review is an explicit per-page confirmation for the current prepared output; it resets when a new export is prepared or closed. It is independent of engine verification and does not block download. Thumbnail image caches retain at most 48 previews per strip. Search indexes, review tracking and thumbnails are memory-only.
 
 Regression checks cover native and OCR patterns, duplicate filtering, stable selection keys, coordinate mapping, encryption and permanent redaction. Browser tests cover native/scanned/mixed pages, selection preservation as results arrive, cancellation with retained results, verified pattern export and review tracking.
+
+## Version 0.5.0 interface
+
+The workbench uses Find → Mark → Review & export stages. Search, scan settings, marked areas, precise coordinates and help collapse independently. Results group by page, with per-page selection, PDF/OCR badges and low-confidence warnings. Clicking a match locates and highlights it without changing its selection.
+
+Fit page and Fit width adjust to the available viewport; numeric zoom remains available. Fit rendering keeps redaction coordinates in PDF points and caps raster size. Resize and page-rail changes recompute automatic fit.
+
+The export preview gives the PDF most of the screen, with a narrow thumbnail rail, compact review controls, zoom options and a verification summary. Confirmation counts are independent of verification; exported copies remain unencrypted.
+
+Mobile uses a document-first layout, bottom stage controls and a native slide-up tools dialog. Find opens search, Mark enables drawing, and Areas opens precise tools. Locating a result closes the sheet to show the document. Scan cancellation is available both on the canvas and in the sheet. Progress announces page numbers, completion or an incomplete search without repeated identical live announcements. Incomplete-search warnings remain visible on the document and carry into export review.
+
+After changing runtime assets, run `python3 build-service-worker.py` to regenerate the offline cache version before deployment.
