@@ -66,8 +66,29 @@ export function searchPDF(doc,query){
    try{
     const hits=text.search(query,'ignore-case');
     if(hits.reduce((n,h)=>n+h.length,0)>=500)limited=true;
+     const neighbours=page.toStructuredText('accurate-bboxes,accurate-side-bearings');
+     const glyphs=[];
+     try{neighbours.walk({onChar(c,o,f,size,q){if(c.trim())glyphs.push(quadRect(q));}});}finally{neighbours.destroy();}
     for(const quads of hits){
-     const rects=quads.map(q=>{let r=quadRect(q);r=[Math.max(b[0],r[0]-2),Math.max(b[1],r[1]-2),Math.min(b[2],r[2]+2),Math.min(b[3],r[3]+2)];if(r[2]-r[0]<5)r[2]=Math.min(b[2],r[0]+5);if(r[3]-r[1]<5)r[3]=Math.min(b[3],r[1]+5);return r;});
+     // Use the matched text extent, not a fixed margin that reaches into
+     // neighbouring letters or punctuation. Account for glyph overhangs on
+     // horizontal and rotated text before constructing the visible box.
+     const rects=quads.map(q=>{
+      const raw=quadRect(q);let r=[...raw];
+      for(const g of glyphs){const cx=(g[0]+g[2])/2,cy=(g[1]+g[3])/2;
+       if(g[1]<r[3]&&g[3]>r[1]){
+        if(cx<raw[0]&&g[2]>r[0])r[0]=Math.max(r[0],g[2]+.02);
+        if(cx>raw[2]&&g[0]<r[2])r[2]=Math.min(r[2],g[0]-.02);
+       }
+       if(g[0]<r[2]&&g[2]>r[0]){
+        if(cy<raw[1]&&g[3]>r[1])r[1]=Math.max(r[1],g[3]+.02);
+        if(cy>raw[3]&&g[1]<r[3])r[3]=Math.min(r[3],g[1]-.02);
+       }
+      }
+      r=[Math.max(b[0],r[0]),Math.max(b[1],r[1]),Math.min(b[2],r[2]),Math.min(b[3],r[3])];
+      if(r[2]<=r[0]||r[3]<=r[1])throw Error('A search match overlaps neighbouring glyphs ambiguously. Mark that match manually.');
+      return r;
+     });
      matches.push({page:i,rects,key:JSON.stringify([i,rects])});
     }
    }finally{text.destroy();}

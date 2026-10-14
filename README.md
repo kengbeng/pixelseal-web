@@ -1,4 +1,4 @@
-# PixelSeal Web 0.2.1
+# PixelSeal Web 0.2.2
 
 PixelSeal Web is a local browser prototype for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -57,7 +57,7 @@ Not included: OCR, automatic detection, image-only export, persistent sessions, 
 
 ## Checks completed
 
-Run `npm test` (or `node tests.mjs` followed by `node features-tests.mjs` and `node verification-tests.mjs`) with Node.js to repeat the engine checks. Tests create temporary fixtures in `../../work/qa/` relative to this project.
+Run `npm test` (or `node tests.mjs` followed by `node features-tests.mjs` then `node verification-tests.mjs` and `node search-margin-tests.mjs`) with Node.js to repeat the engine checks. Tests create temporary fixtures in `../../work/qa/` relative to this project.
 
 - Text removal and retention of unaffected searchable text.
 - Pages rotated at 0, 90, 180 and 270 degrees.
@@ -79,10 +79,14 @@ MuPDF is available under AGPL or a commercial licence from Artifex. Distribution
 Official documentation: https://mupdf.readthedocs.io/en/latest/guide/using-with-javascript.html
 Licensing: https://mupdf.readthedocs.io/en/latest/license.html
 
-## Version 0.2.1 validation
+## Version 0.2.0 validation
 
 Search-to-export tests cover all four page rotations and case-insensitive matching. State tests cover undo/redo of edits and clearing, redo invalidation after a new edit, independent history snapshots, movement clamping, and minimum-size resizing. Existing export regression checks remain in place.
 
 ## Version 0.2.1 verification fix
 
 Verification uses character bounds calculated from glyph outlines rather than font ascent/descent boxes. This avoids false positives from neighbouring lines whose font boxes overlap a search redaction. ActualText replacements are ignored during this check. Remaining non-whitespace glyphs still fail verification, and black-fill verification is unchanged.
+
+## Version 0.2.2 search-box correction
+
+Search boxes use the matched text extent and avoid neighbouring glyph overhangs. A fixed two-point margin could overlap letters beside a match and cause a legitimate residual-text failure. Glyph-aware boundary adjustment covers horizontal and rotated text. The export verifier is unchanged. Validation against the supplied 45-page risk-management code of practice found 77 workplace matches and confirmed removal of all 693 matched characters while retaining adjacent text. The supplied PDF is not included in the repository.
