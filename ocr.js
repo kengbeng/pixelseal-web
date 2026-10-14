@@ -1,11 +1,11 @@
 import Tesseract from './vendor/ocr/tesseract.esm.min.js';
 const {createWorker}=Tesseract;
-import {wordsFromBlocks} from './ocr-model.js?v=0.3.1';
+import {wordsFromBlocks} from './ocr-model.js?v=0.4.0';
 export class OCRController {
- constructor(){this.pages=new Map();this.run=null;}
- reset(){this.cancel();this.pages.clear();}
+ constructor(){this.pages=new Map();this.settings=new Map();this.run=null;}
+ reset(){this.cancel();this.pages.clear();this.settings.clear();}
  cancel(){if(this.run){this.run.cancelled=true;this.run.reject(Error('OCR cancelled. Completed pages remain searchable.'));this.run.worker?.terminate().catch(()=>{});}}
- async scan(pageNumbers,render,onProgress,language='eng'){
+ async scan(pageNumbers,render,onProgress,language='eng',rotation=0){
   if(this.run)throw Error('OCR is already running.');
   let reject;const cancelled=new Promise((_,r)=>reject=r),token={cancelled:false,reject,worker:null};this.run=token;
   const directory=new URL('./vendor/ocr/',import.meta.url).href;
@@ -18,7 +18,7 @@ export class OCRController {
     const raster=await Promise.race([render(token.page),cancelled]);
     const result=await Promise.race([engine.recognize(new Blob([raster.png],{type:'image/png'}),{rotateAuto:false},{text:true,blocks:true}),cancelled]);
     if(token.cancelled)throw Error('OCR cancelled.');
-    const words=wordsFromBlocks(result.data.blocks,raster);this.pages.set(token.page,words);token.completed=i+1;onProgress({status:'page complete',progress:1,page:token.page,completed:i+1,total:pageNumbers.length});
+    const words=wordsFromBlocks(result.data.blocks,raster);this.pages.set(token.page,words);this.settings.set(token.page,`${language}:${rotation}`);token.completed=i+1;onProgress({status:'page complete',progress:1,page:token.page,completed:i+1,total:pageNumbers.length});
    }
    return {pages:pageNumbers.length,words:pageNumbers.reduce((n,page)=>n+(this.pages.get(page)?.length||0),0)};
   }finally{await token.worker?.terminate().catch(()=>{});if(this.run===token)this.run=null;}

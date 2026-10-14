@@ -1,4 +1,4 @@
-# PixelSeal Web 0.3.1
+# PixelSeal Web 0.4.0
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -33,10 +33,10 @@ The server binds only to this computer. It serves bundled assets and has no PDF 
 
 1. Select **Open PDF** and choose a local document.
 2. Drag a box around sensitive content. Include a small margin around text. Boxes must be at least 5 PDF points wide and tall.
-3. Use **Find sensitive text** to search across all pages. Search is case-insensitive and normalises whitespace. Select **Show** to review a match on its page, tick the matches to redact, then select **Mark selected matches**. Nothing is selected automatically. Search results are limited to 500 highlight regions per page; an explicit message appears if that limit is reached. For English or simplified Chinese scans, run **Run OCR** first, then search and review recognised matches. OCR confidence is displayed; scan quality affects accuracy.
+3. Use **Find text and patterns**. Enter a word or phrase, or choose email addresses, phone numbers or a custom pattern. **Include scanned text** is on by default. PDF text matches appear first; OCR matches arrive as pages finish. Under **Scan options**, choose English or simplified Chinese, processing rotation, and page scope. The default recognises pages without selectable text. Use **Scan all pages** for mixed text/image pages. Completed scans are reused for the same document, language and rotation. **Cancel scan** retains completed results and labels the search incomplete. Review **Show** matches, tick the desired matches and select **Mark selected matches**. **Select current matches** selects only matches already present; incoming results are unchecked. Nothing is selected automatically. Results are capped at 500 matches/highlight regions per page; a warning appears if results may be incomplete.
 4. Drag an existing box to move it. Select a box and drag its corner handles to resize, or enter X, Y, Width and Height and select **Apply dimensions**. Coordinates are in PDF points.
 5. Use **Undo** and **Redo** for drawing, batch marking, moving, resizing, removal and clearing. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Focus the page overlay and use arrow keys to move the selected box; Shift moves ten points. Delete removes the selected box. Escape deselects it.
-6. Select **Verify & preview PDF**. Review the actual exported pages and jump to marked areas, then select **Download redacted PDF**.
+6. Select **Verify & preview PDF**. Review the actual exported pages using thumbnails and marked-area jumps. Check **I have reviewed this exported page** to track your confirmation, then select **Download redacted PDF**.
 7. Open the downloaded copy and review it before sharing. The preview continues to show the source document with proposed marks.
 
 The original file is never overwritten. Marks are held in browser memory and are lost when the page is refreshed or another PDF is opened.
@@ -104,3 +104,13 @@ Export now previews the saved PDF before download, with page navigation, jumps t
 OCR offers English and simplified Chinese, plus 0/90/180/270-degree processing rotation. Rotation is mapped back to the original page for redaction; original page orientation is retained. Matches below 70% confidence carry an explicit review warning.
 
 Keyboard users can add a centred area without dragging and edit its coordinates. Skip navigation, visible focus, larger touch targets, responsive dialogs and a pan/draw toggle improve accessibility and mobile use.
+
+## Version 0.4.0
+
+The combined Find workflow returns PDF text first, then adds OCR matches incrementally. Selection uses stable match identities, with overlapping native/OCR results deduplicated in favour of PDF text. Scan results are reused only when language and rotation match. Search completion and cancelled/incomplete scans are explicit. Mixed pages require Scan all pages or a current-page scan.
+
+Email and phone patterns are suggestions, not a guarantee of identifying every sensitive item. Custom patterns use bounded tokens: `#` for a digit, `@` for an English letter, `?` for a non-space character. For example, `ID-####` matches `ID-1234`; escape a token with a backslash to match it literally. Arbitrary regular expressions are not supported.
+
+Source and export thumbnails load on demand and show marked-area counts. Exported-page review is an explicit per-page confirmation for the current prepared output; it resets when a new export is prepared or closed. It is independent of engine verification and does not block download. Thumbnail image caches retain at most 48 previews per strip. Search indexes, review tracking and thumbnails are memory-only.
+
+Regression checks cover native and OCR patterns, duplicate filtering, stable selection keys, coordinate mapping, encryption and permanent redaction. Browser tests cover native/scanned/mixed pages, selection preservation as results arrive, cancellation with retained results, verified pattern export and review tracking.

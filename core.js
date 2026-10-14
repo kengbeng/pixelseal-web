@@ -57,10 +57,10 @@ export function verifyPDF(bytes,marks){
  }finally{doc.destroy();}
 }
 // MuPDF normalises whitespace and matches without case sensitivity.
-export function searchPDF(doc,query){
+export function searchPDF(doc,query,pageNumbers){
  query=query.trim();if(!query)throw Error('Enter text to search.');
  const matches=[];let limited=false;
- for(let i=0;i<doc.countPages();i++){
+ for(const i of pageNumbers||Array.from({length:doc.countPages()},(_,i)=>i)){
   const page=doc.loadPage(i);
   try{
    const b=page.getBounds(),text=page.toStructuredText('');
