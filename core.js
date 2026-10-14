@@ -4,7 +4,8 @@ export const quadRect=q=>[Math.min(q[0],q[2],q[4],q[6]),Math.min(q[1],q[3],q[5],
 const overlaps=(a,b)=>a[0]<b[2]-.01&&a[2]>b[0]+.01&&a[1]<b[3]-.01&&a[3]>b[1]+.01;
 export function openPDF(bytes,password='') {
  const doc=new mupdf.PDFDocument(bytes);
- if(doc.needsPassword()&&!doc.authenticatePassword(password)){doc.destroy();throw Error('This PDF needs a valid password.');}
+ doc.pixelsealProtected=doc.needsPassword();
+ if(doc.pixelsealProtected&&!doc.authenticatePassword(password)){doc.destroy();const error=Error('This PDF needs a valid password.');error.code='PASSWORD_REQUIRED';throw error;}
  return doc;
 }
 export function exportPDF(bytes,marks,password='') {
