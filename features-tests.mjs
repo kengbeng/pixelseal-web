@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {History,moveRect,resizeRect} from './model.js';
 import {mupdf,openPDF,searchPDF,exportPDF} from './core.js';
-const bytes=fs.readFileSync(new URL('../../work/qa/input.pdf',import.meta.url)),doc=openPDF(bytes);
+const bytes=fs.readFileSync(new URL('./work/qa/input.pdf',import.meta.url)),doc=openPDF(bytes);
 const hits=searchPDF(doc,'secret-1234');assert.equal(hits.matches.length,4);assert.equal(hits.limited,false);assert.deepEqual(hits.matches.map(h=>h.page),[0,1,2,3]);
 assert.equal(searchPDF(doc,'not-present').matches.length,0);assert.throws(()=>searchPDF(doc,'  '),/Enter text/);
 const marks=hits.matches.flatMap(h=>h.rects.map(rect=>({page:h.page,rect}))),out=openPDF(exportPDF(bytes,marks));

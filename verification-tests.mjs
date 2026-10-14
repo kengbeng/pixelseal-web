@@ -9,7 +9,7 @@ for(const rotation of [0,90,180,270]){
  assert.throws(()=>verifyPDF(input,marks),/text remains/);
  const result=exportPDF(input,marks),out=openPDF(result),p=out.loadPage(2),normal=p.toStructuredText('');let legacyFalsePositive=false;
  normal.walk({onChar(c,o,f,s,q){if(c.trim()&&marks.some(m=>overlaps(quadRect(q),m.rect)))legacyFalsePositive=true;}});assert(legacyFalsePositive,'The fixture must reproduce the old oversized-font-box failure.');assert(!normal.asText().includes('SECRET'));assert(normal.asText().includes('PUBLIC INFORMATION'));normal.destroy();p.destroy();out.destroy();d.destroy();
- if(rotation===0){fs.writeFileSync(new URL('../../work/qa/page3-dense-input.pdf',import.meta.url),input);fs.writeFileSync(new URL('../../work/qa/page3-dense-redacted.pdf',import.meta.url),result);}
+ if(rotation===0){fs.writeFileSync(new URL('./work/qa/page3-dense-input.pdf',import.meta.url),input);fs.writeFileSync(new URL('./work/qa/page3-dense-redacted.pdf',import.meta.url),result);}
 }
 // Genuine residual text, including invisible text beneath a black rectangle, must fail.
 for(const renderMode of [0,3]){

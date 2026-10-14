@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {mupdf,openPDF,exportPDF,verifyPDF,quadRect} from './core.js';
 import fs from 'node:fs';
-const qa=new URL('../../work/qa/',import.meta.url);
+const qa=new URL('./work/qa/',import.meta.url);
 const source=new mupdf.PDFDocument(),font=source.addSimpleFont(new mupdf.Font('Helvetica'));
 for(const rotation of [0,90,180,270]){const p=source.addPage([0,0,400,300],rotation,{Font:{F1:font}},'BT /F1 18 Tf 40 220 Td (SECRET-1234) Tj 0 -70 Td (PUBLIC INFORMATION) Tj ET');source.insertPage(-1,p);p.destroy();}
 source.setMetaData('info:Title','SECRET-1234');const ef=source.addEmbeddedFile('secret.txt','text/plain','SECRET-1234',new Date(),new Date(),false);source.insertEmbeddedFile('secret.txt',ef);ef.destroy();

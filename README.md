@@ -1,4 +1,4 @@
-# PixelSeal Web 0.2.2
+# PixelSeal Web 0.3.0
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -8,7 +8,7 @@ This is a separate web app, not a full migration of PixelSeal 0.8.1. The origina
 
 GitHub Pages address: https://kengbeng.github.io/pixelseal-web/
 
-Open this address and select a PDF. No Python installation or local server is required for the hosted version. The browser downloads application assets from GitHub Pages; PDF bytes are processed locally and are not uploaded. This version does not install an offline service worker, so an initial internet connection is required.
+Open this address and select a PDF. No Python installation or local server is required for the hosted version. The browser downloads application assets from GitHub Pages; PDF bytes are processed locally and are not uploaded. An initial internet connection is required to cache the app and bundled English OCR assets (about 39 MB). Wait for **Ready offline**, then use **Install app** or your browser installation menu. PDF files and OCR results are held in memory and are not cached.
 
 ## Publish on GitHub Pages
 
@@ -33,7 +33,7 @@ The server binds only to this computer. It serves bundled assets and has no PDF 
 
 1. Select **Open PDF** and choose a local document.
 2. Drag a box around sensitive content. Include a small margin around text. Boxes must be at least 5 PDF points wide and tall.
-3. Use **Find sensitive text** to search across all pages. Search is case-insensitive and normalises whitespace. Select **Show** to review a match on its page, tick the matches to redact, then select **Mark selected matches**. Nothing is selected automatically. Search results are limited to 500 highlight regions per page; an explicit message appears if that limit is reached. Scanned pages without selectable text require OCR and are not searchable.
+3. Use **Find sensitive text** to search across all pages. Search is case-insensitive and normalises whitespace. Select **Show** to review a match on its page, tick the matches to redact, then select **Mark selected matches**. Nothing is selected automatically. Search results are limited to 500 highlight regions per page; an explicit message appears if that limit is reached. For upright English scans, run **Run English OCR** first, then search and review recognised matches. OCR confidence is displayed; scan quality affects accuracy.
 4. Drag an existing box to move it. Select a box and drag its corner handles to resize, or enter X, Y, Width and Height and select **Apply dimensions**. Coordinates are in PDF points.
 5. Use **Undo** and **Redo** for drawing, batch marking, moving, resizing, removal and clearing. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Focus the page overlay and use arrow keys to move the selected box; Shift moves ten points. Delete removes the selected box. Escape deselects it.
 6. Select **Verify & download PDF**.
@@ -51,13 +51,13 @@ Interactive forms are rejected during export. Flatten forms before using PixelSe
 
 ## Current scope
 
-Included: local file opening, manual redaction, document text search with reviewed match selection, editable boxes, undo/redo, page navigation, zoom, searchable export, export verification, a worker for PDF processing, and bundled MuPDF.js.
+Included: local file opening, manual redaction, document text search with reviewed match selection, editable boxes, undo/redo, page navigation, zoom, searchable export, export verification, a worker for PDF processing, bundled MuPDF.js, English OCR, offline caching and web app installation.
 
-Not included: OCR, automatic detection, image-only export, persistent sessions, PWA installation, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and mobile devices have not been validated.
+Not included: automatic detection, image-only export, persistent sessions, or full feature parity with the desktop version. Large PDFs may exceed browser memory. Chrome and Edge are intended targets; the initial UI workflow was checked in Codex's in-app browser. Safari, Firefox and mobile devices have not been validated.
 
 ## Checks completed
 
-Run `npm test` (or `node tests.mjs` followed by `node features-tests.mjs` then `node verification-tests.mjs` and `node search-margin-tests.mjs`) with Node.js to repeat the engine checks. Tests create temporary fixtures in `../../work/qa/` relative to this project.
+Run `npm test` (or `node tests.mjs` followed by `node features-tests.mjs` then `node verification-tests.mjs` and `node search-margin-tests.mjs`) with Node.js to repeat the engine checks. Tests create temporary fixtures in `work/qa/` relative to this project.
 
 - Text removal and retention of unaffected searchable text.
 - Pages rotated at 0, 90, 180 and 270 degrees.
@@ -90,3 +90,7 @@ Verification uses character bounds calculated from glyph outlines rather than fo
 ## Version 0.2.2 search-box correction
 
 Search boxes use the matched text extent and avoid neighbouring glyph overhangs. A fixed two-point margin could overlap letters beside a match and cause a legitimate residual-text failure. Glyph-aware boundary adjustment covers horizontal and rotated text. The export verifier is unchanged. Validation against the supplied 45-page risk-management code of practice found 77 workplace matches and confirmed removal of all 693 matched characters while retaining adjacent text. The supplied PDF is not included in the repository.
+
+## Version 0.3.0
+
+English OCR runs locally using bundled Tesseract.js 7.0.0 and tessdata_fast. OCR matches are reviewed before marking; no searchable OCR layer is added to exports. The app includes a manifest, offline service worker, favicon and installation icons. Browser checks cover recognition and verified redaction of an image-only fixture. Third-party OCR licences are in `vendor/ocr/`.
