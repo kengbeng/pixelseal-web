@@ -1,5 +1,5 @@
-import {History,clone,moveRect,resizeRect} from './model.js?v=0.2.0';
-const $=id=>document.getElementById(id),worker=new Worker('./worker.js?v=0.2.0',{type:'module'}),history=new History();
+import {History,clone,moveRect,resizeRect} from './model.js?v=0.2.1';
+const $=id=>document.getElementById(id),worker=new Worker('./worker.js?v=0.2.1',{type:'module'}),history=new History();
 let seq=0,pending=new Map(),page=0,count=0,marks=[],bounds,name='',busy=false,url,drag,selected=-1,matches=[],checked=new Set(),activeHit=-1;
 worker.onmessage=({data:d})=>{let p=pending.get(d.id);if(p){pending.delete(d.id);d.error?p.reject(Error(d.error)):p.resolve(d.result);}};
 worker.onerror=()=>{for(let p of pending.values())p.reject(Error('The PDF engine could not load. Refresh the page.'));pending.clear();};

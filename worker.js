@@ -1,4 +1,4 @@
-import {mupdf,openPDF,exportPDF,searchPDF} from './core.js?v=0.2.0';
+import {mupdf,openPDF,exportPDF,searchPDF} from './core.js?v=0.2.1';
 let doc,bytes,password='';
 self.onmessage=({data})=>{
  const {id,type}=data;

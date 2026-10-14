@@ -39,8 +39,10 @@ export function verifyPDF(bytes,marks){
   for(const index of new Set(marks.map(m=>m.page))){
    const page=doc.loadPage(index),regions=marks.filter(m=>m.page===index).map(m=>m.rect);
    try{
-    const text=page.toStructuredText('');
-    try{text.walk({onChar(c,o,f,s,q){if(c.trim()&&regions.some(r=>overlaps(quadRect(q),r)))throw Error(`Verification failed: text remains in a marked area on page ${index+1}.`);}});}finally{text.destroy();}
+    // Check glyph outlines instead of oversized font ascent/descent boxes.
+    // Ignore ActualText substitutions so they cannot hide underlying characters.
+    const text=page.toStructuredText('accurate-bboxes,accurate-side-bearings,ignore-actualtext');
+    try{text.walk({onChar(c,o,f,s,q){if(c.trim()&&regions.some(r=>overlaps(quadRect(q),r)))throw Error(`Verification failed: text remains in a marked area on page ${index+1} (character ${JSON.stringify(c)}).`);}});}finally{text.destroy();}
     const pix=page.toPixmap([1,0,0,1,0,0],mupdf.ColorSpace.DeviceRGB,false,false);
     try{
      const pixels=pix.getPixels(),stride=pix.getStride(),n=pix.getNumberOfComponents();
