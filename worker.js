@@ -1,5 +1,5 @@
-import {findPatternText} from './search-model.js?v=0.5.0';
-import {mupdf,openPDF,exportPDF,searchPDF} from './core.js?v=0.5.0';
+import {findPatternText} from './search-model.js?v=0.5.1';
+import {mupdf,openPDF,exportPDF,searchPDF} from './core.js?v=0.5.1';
 let doc,bytes,password='',exported;
 self.onmessage=({data})=>{
  const {id,type}=data;
@@ -34,6 +34,13 @@ self.onmessage=({data})=>{
   }else if(type==='export'){const output=exportPDF(bytes,data.marks,password);exported?.destroy();exported=openPDF(output);result={bytes:output,count:exported.countPages()};}
   else if(type==='exportRender'){if(!exported)throw Error('Prepare an export first.');const page=exported.loadPage(data.page);try{const pix=page.toPixmap([data.scale||1,0,0,data.scale||1,0,0],mupdf.ColorSpace.DeviceRGB,false,true);try{result={bounds:page.getBounds(),png:new Uint8Array(pix.asPNG())};}finally{pix.destroy();}}finally{page.destroy();}}
   else throw Error('Unknown operation.');
+  if(type==='search'||type==='patterns')addContexts(result.matches);
   self.postMessage({id,result});
  }catch(e){if(type==='open')password='';self.postMessage({id,error:e.message||String(e),code:e.code});}
 };
+
+function addContexts(matches){
+ for(const pageNumber of new Set(matches.map(m=>m.page))){const page=doc.loadPage(pageNumber),chars=[];let structured;try{structured=page.toStructuredText('');structured.walk({onChar(c,o,f,s,q){chars.push({c,rect:[Math.min(q[0],q[2],q[4],q[6]),Math.min(q[1],q[3],q[5],q[7]),Math.max(q[0],q[2],q[4],q[6]),Math.max(q[1],q[3],q[5],q[7])]});},endLine(){chars.push({c:' '});}});
+ for(const hit of matches.filter(m=>m.page===pageNumber)){const indices=[];chars.forEach((c,i)=>{if(c.rect&&hit.rects.some(r=>(Math.min(r[2],c.rect[2])-Math.max(r[0],c.rect[0]))>0&&(Math.min(r[3],c.rect[3])-Math.max(r[1],c.rect[1]))>0))indices.push(i);});if(indices.length){const first=indices[0],last=indices.at(-1),start=Math.max(0,first-38),end=Math.min(chars.length,last+39);hit.context=(start?'…':'')+chars.slice(start,end).map(c=>c.c).join('').replace(/\s+/g,' ').trim()+(end<chars.length?'…':'');}}
+ }finally{structured?.destroy();page.destroy();}}
+}

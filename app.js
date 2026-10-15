@@ -1,9 +1,9 @@
-import {fitScale,groupMatches,scrollTarget} from './ui-model.js?v=0.5.0';
-import {searchOCR,mergeMatches,patternRegex,pageMarkCounts} from './search-model.js?v=0.5.0';
-import {OCRController} from './ocr.js?v=0.5.0';
-import {History,clone,moveRect,resizeRect} from './model.js?v=0.5.0';
+import {fitScale,groupMatches,scrollTarget} from './ui-model.js?v=0.5.1';
+import {searchOCR,mergeMatches,patternRegex,pageMarkCounts} from './search-model.js?v=0.5.1';
+import {OCRController} from './ocr.js?v=0.5.1';
+import {History,clone,moveRect,resizeRect} from './model.js?v=0.5.1';
 const mobileQuery=matchMedia('(max-width:780px)'),collapsedGroups=new Set();let currentStage='find',currentScale=1,exportBounds,exportScale=1,fitTimer,resizeDirty=false;
-const $=id=>document.getElementById(id),worker=new Worker('./worker.js?v=0.5.0',{type:'module'}),history=new History(),ocr=new OCRController();
+const $=id=>document.getElementById(id),worker=new Worker('./worker.js?v=0.5.1',{type:'module'}),history=new History(),ocr=new OCRController();
 let seq=0,pending=new Map(),page=0,count=0,marks=[],bounds,name='',busy=false,url,drag,selected=-1,matches=[],checked=new Set(),activeHit=-1,scanning=false,scanCancelled=false,searchSession=null;
 worker.onmessage=({data:d})=>{let p=pending.get(d.id);if(p){pending.delete(d.id);d.error?p.reject(Object.assign(Error(d.error),{code:d.code})):p.resolve(d.result);}};
 worker.onerror=()=>{for(let p of pending.values())p.reject(Error('The PDF engine could not load. Refresh the page.'));pending.clear();};
@@ -20,7 +20,7 @@ function controls(){
  $('cancelocr').disabled=!scanning;
  $('search').disabled=busy||scanning||!count;$('query').disabled=busy||scanning||!count||['email','phone'].includes($('searchmode').value);
  for(let id of ['selectall','selectnone'])$(id).disabled=busy||!matches.length;
- $('addmatches').disabled=busy||!checked.size;
+ $('addmatches').disabled=busy||!checked.size;$('addmatches').textContent=`Mark selected (${checked.size})`;$('addmatches').hidden=currentStage!=='find'||!matches.length;$('export').hidden=currentStage==='find'&&matches.length>0;$('sidebar').classList.toggle('has-document',!!count);$('fileaction').textContent=count?'Change PDF':'Open PDF';$('pendingnotice').hidden=!marks.length;$('ocrprogress').hidden=!scanning;
  $('pageinfo').textContent=count?`Page ${page+1} of ${count}`:'No pages';$('total').textContent=marks.length;
  for(let id of ['editx','edity','editw','edith','applyedit','remove'])$(id).disabled=busy;
 }
@@ -48,7 +48,7 @@ function drawResults(){
   const group=document.createElement('li'),details=document.createElement('details'),summary=document.createElement('summary'),groupLabel=document.createElement('label'),groupCheck=document.createElement('input'),title=document.createElement('span'),countLabel=document.createElement('span'),list=document.createElement('ol');group.className='result-group';details.open=!collapsedGroups.has(number);details.ontoggle=()=>{details.open?collapsedGroups.delete(number):collapsedGroups.add(number);};
   groupLabel.className='group-select';groupCheck.type='checkbox';groupCheck.disabled=busy;groupCheck.setAttribute('aria-label',`Select all matches on page ${number+1}`);const selections=items.filter(({hit})=>checked.has(hit.key)).length;groupCheck.checked=selections===items.length;groupCheck.indeterminate=selections>0&&selections<items.length;groupCheck.onchange=()=>{for(const {hit}of items)groupCheck.checked?checked.add(hit.key):checked.delete(hit.key);drawResults();controls();};groupLabel.append(groupCheck);title.textContent=`Page ${number+1}`;countLabel.textContent=`${items.length} match${items.length===1?'':'es'}`;countLabel.className='group-count';summary.append(groupLabel,title,countLabel);list.className='page-results';
   for(const {hit,index}of items){const li=document.createElement('li'),label=document.createElement('label'),input=document.createElement('input'),button=document.createElement('button'),text=document.createElement('span'),badges=document.createElement('span');li.className='result-row';input.type='checkbox';input.checked=checked.has(hit.key);input.disabled=busy;input.setAttribute('aria-label',`Select match ${index+1} on page ${hit.page+1}`);input.onchange=()=>{input.checked?checked.add(hit.key):checked.delete(hit.key);drawResults();controls();};label.append(input);
-   button.className='result-link';button.disabled=busy;button.setAttribute('aria-label',`Locate match ${index+1} on page ${hit.page+1}`);button.setAttribute('aria-current',String(index===activeHit));button.onclick=()=>locateMatch(index);text.className='match-text';text.textContent=hit.text||searchSession?.spec.value||`Match ${index+1}`;badges.className='match-badges';const source=document.createElement('span');source.className='badge '+(hit.source==='ocr'?'badge-ocr':'badge-pdf');source.textContent=hit.source==='ocr'?`OCR · ${hit.confidence}%`:'PDF text';badges.append(source);if(hit.source==='ocr'&&hit.confidence<70){const warning=document.createElement('span');warning.className='badge badge-low';warning.textContent='Low confidence · review image';badges.append(warning);}if(alreadyMarked(hit)){const marked=document.createElement('span');marked.className='badge badge-marked';marked.textContent='Marked';badges.append(marked);}button.append(text,badges);li.append(label,button);li.onclick=e=>{if(!e.target.closest('input,label,button'))locateMatch(index);};list.append(li);
+   button.className='result-link';button.disabled=busy;button.setAttribute('aria-label',`Locate match ${index+1} on page ${hit.page+1}`);button.setAttribute('aria-current',String(index===activeHit));button.onclick=()=>locateMatch(index);text.className='match-text';text.textContent=hit.text||searchSession?.spec.value||`Match ${index+1}`;badges.className='match-badges';const source=document.createElement('span');source.className='badge '+(hit.source==='ocr'?'badge-ocr':'badge-pdf');source.textContent=hit.source==='ocr'?`OCR · ${hit.confidence}%`:'PDF text';badges.append(source);if(hit.source==='ocr'&&hit.confidence<70){const warning=document.createElement('span');warning.className='badge badge-low';warning.textContent='Low confidence · review image';badges.append(warning);}if(alreadyMarked(hit)){const marked=document.createElement('span');marked.className='badge badge-marked';marked.textContent='Marked';badges.append(marked);}const context=document.createElement('span');context.className='match-context';context.textContent=hit.context||'';button.append(text,context,badges);li.append(label,button);li.onclick=e=>{if(!e.target.closest('input,label,button'))locateMatch(index);};list.append(li);
   }details.append(summary,list);group.append(details);$('results').append(group);
  }$('results').scrollTop=scroll;if(focus)for(const el of $('results').querySelectorAll('input,button'))if(el.getAttribute('aria-label')===focus)el.focus({preventScroll:true});
 }
@@ -81,7 +81,7 @@ function askPassword(filename,incorrect=false){
  });
 }
 $('showpassword').onchange=()=>{$('pdfpassword').type=$('showpassword').checked?'text':'password';};
-$('file').onchange=()=>task(async()=>{let f=$('file').files[0];if(!f)return;closeTools();setStage('find');setSearchState('Opening PDF','running');status('Opening PDF…');$('protectioninfo').hidden=true;$('filename').textContent='No document open';count=0;marks=[];collapsedGroups.clear();history.reset();ocr.reset();$('ocrprogress').hidden=true;$('ocrprogress').value=0;$('ocrinfo').textContent='Completed scans are reused for this document and scan settings.';selected=-1;matches=[];checked.clear();activeHit=-1;bounds=null;$('query').value='';$('searchinfo').textContent='Enter text or choose a pattern, then select Find.';$('page').hidden=true;$('empty').hidden=false;searchSession=null;clearThumbnails('source');let bytes=await f.arrayBuffer(),r;let password='',incorrect=false;for(;;){try{r=await call('open',{bytes,password});password='';break;}catch(e){password='';if(e.code!=='PASSWORD_REQUIRED')throw e;password=await askPassword(f.name,incorrect);if(password===null){await call('close');$('file').value='';$('filename').textContent='No document open';throw Error('Opening cancelled. Select a PDF to try again.');}incorrect=true;}}$('protectioninfo').hidden=!r.protected;name=f.name;count=r.count;page=0;$('filename').textContent=name;await render();buildThumbnails('source',count);setSearchState('Ready to search','idle');status('Find matches or switch to Mark to draw areas.');});
+$('file').onchange=()=>task(async()=>{let f=$('file').files[0];if(!f)return;closeTools();setStage('find');setSearchState('Opening PDF','running');status('Opening PDF…');$('protectioninfo').hidden=true;$('filename').textContent='No document open';count=0;marks=[];collapsedGroups.clear();history.reset();ocr.reset();$('ocrprogress').hidden=true;$('ocrprogress').value=0;$('ocrinfo').textContent='Completed scans are reused for this document and scan settings.';selected=-1;matches=[];checked.clear();activeHit=-1;bounds=null;$('query').value='';$('searchinfo').textContent='Enter text or choose a pattern, then select Find.';$('page').hidden=true;$('empty').hidden=false;searchSession=null;clearThumbnails('source');let bytes=await f.arrayBuffer(),r;let password='',incorrect=false;for(;;){try{r=await call('open',{bytes,password});password='';break;}catch(e){password='';if(e.code!=='PASSWORD_REQUIRED')throw e;password=await askPassword(f.name,incorrect);if(password===null){await call('close');$('file').value='';$('filename').textContent='No document open';throw Error('Opening cancelled. Select a PDF to try again.');}incorrect=true;}}$('protectioninfo').hidden=!r.protected;name=f.name;count=r.count;page=0;$('searchsettings').open=true;$('settingssummary').textContent='Search settings';$('filename').textContent=name;await render();buildThumbnails('source',count);setSearchState('Ready to search','idle');status('Find matches or switch to Mark to draw areas.');});
 $('prev').onclick=()=>task(async()=>{page--;selected=-1;await render();});$('next').onclick=()=>task(async()=>{page++;selected=-1;await render();});$('zoom').onchange=()=>{if(count)task(render);};
 $('undo').onclick=()=>restore('undo');$('redo').onclick=()=>restore('redo');$('clear').onclick=()=>{selected=-1;commit([],'All marks cleared. Undo restores them.');};
 function refreshSearch(message){
@@ -96,10 +96,10 @@ function refreshSearch(message){
 }
 function searchSpec(){const mode=$('searchmode').value,value=$('query').value.trim();if(mode==='text'&&!value)throw Error('Enter a word or phrase.');if(mode!=='text')patternRegex(mode,value);return {mode,value};}
 async function beginSearch(){
- if(busy||scanning||!count)return;setStage('find');setSearchState('Searching PDF text','running');searchSession=null;
+ if(busy||scanning||!count)return;setStage('find');$('searchsettings').open=true;setSearchState('Searching PDF text','running');searchSession=null;
  await task(async()=>{matches=[];checked.clear();activeHit=-1;const spec=searchSpec();status('Searching PDF text…');const native=await call(spec.mode==='text'?'search':'patterns',spec.mode==='text'?{query:spec.value}:{spec});searchSession={spec,native,language:$('ocrlanguage').value,rotation:Number($('ocrrotation').value),includeScan:$('includescan').checked};refreshSearch($('includescan').checked?'PDF text ready; preparing scanned search.':'Search complete (PDF text only).');});
  if(!searchSession)return;
- if($('includescan').checked)await scanDocument(false);else status('Search complete. Scanned pages were not recognised for this search.');
+ if($('includescan').checked)await scanDocument(false);else status('Search complete. Scanned pages were not recognised for this search.');revealResults();
 }
 $('searchform').onsubmit=e=>{e.preventDefault();beginSearch();};
 $('searchmode').onchange=()=>{const mode=$('searchmode').value;$('querylabel').textContent=mode==='custom'?'Custom pattern':'Name, identifier or phrase';$('query').placeholder=mode==='custom'?'Example: ID-####':mode==='text'?'Search document text':'No search text needed';$('patternhelp').hidden=mode==='text';if(['email','phone'].includes(mode))$('query').value='';controls();};
@@ -128,7 +128,7 @@ $('downloadexport').onclick=()=>{if(!exportBytes)return;const u=URL.createObject
 function closeExport(){setStage('mark');exportBounds=undefined;clearThumbnails('export');reviewedPages.clear();exportBytes=undefined;URL.revokeObjectURL(exportURL);$('exportimage').removeAttribute('src');}
 $('closeexport').onclick=()=>$('exportdialog').close();$('exportdialog').onclose=closeExport;
 $('addarea').onclick=()=>{if(!bounds||busy)return;const [x,y,x1,y1]=bounds,w=Math.min(120,x1-x),h=Math.min(40,y1-y);selected=marks.length;commit([...marks,{page,rect:[x+(x1-x-w)/2,y+(y1-y-h)/2,x+(x1-x+w)/2,y+(y1-y+h)/2]}],'Area added. Adjust coordinates or move with arrow keys.');$('editdetails').open=true;$('editx').focus();};
-$('touchmode').onclick=()=>{const pan=$('touchmode').getAttribute('aria-pressed')!=='true';$('touchmode').setAttribute('aria-pressed',String(pan));$('touchmode').textContent=pan?'Draw / edit areas':'Pan page';$('page').classList.toggle('pan',pan);};controls();
+$('touchmode').onclick=()=>setPan(true);$('drawmode').onclick=()=>setPan(false);controls();
 
 async function scanDocument(force){
  if(scanning)return;scanning=true;scanCancelled=false;setSearchState('Preparing scan','running');controls();
@@ -147,15 +147,15 @@ async function scanDocument(force){
   },language,rotation);
   setSearchState('Scan complete','complete');$('ocrinfo').textContent=`Scan complete: ${result.words} words on ${result.pages} pages. Results are reused for these settings.`;refreshSearch('Search complete for selected scan scope.');status(searchSession?'Search complete. Review matches before marking.':'Scan complete. Enter text or choose a pattern, then select Find.');
  }catch(e){const message=scanCancelled?'Search incomplete: scan cancelled. Completed results retained.':`Search incomplete: ${e.message}`;$('ocrinfo').textContent=message;setSearchState('Search incomplete','incomplete',`${ocr.pages.size} scanned pages retained`);refreshSearch(message);status(message,!scanCancelled);}
- finally{scanning=false;controls();}
+ finally{scanning=false;controls();if(searchSession)revealResults();}
 }
 $('runocr').onclick=()=>{if(busy||scanning||!count)return;searchSession=null;matches=[];checked.clear();drawResults();draw();scanDocument(true);};
 $('cancelocr').onclick=$('panelcancel').onclick=()=>{scanCancelled=true;ocr.cancel();};
 
 function setSearchState(label,state='idle',detail=''){if($('searchstate').textContent!==label)$('searchstate').textContent=label;$('searchstate').dataset.state=state;const message=detail?(detail.startsWith(label)?detail:`${label} · ${detail}`):label;if($('panelsearchstate').textContent!==message)$('panelsearchstate').textContent=message;}
 function updateWorkflow(){for(const [stage,ids]of [['find',['stagefind','mobilefind']],['mark',['stagemark','mobilemark']],['review',['stagereview','mobilereview']]])for(const id of ids){$(id).setAttribute('aria-current',currentStage===stage?'step':'false');$(id).disabled=busy||(stage==='mark'&&!count)||(stage==='review'&&(!marks.length||scanning));}}
-function setStage(stage,{tools=false}={}){currentStage=stage;if(mobileQuery.matches&&stage!=='review')setPan(stage==='find');$('findpanel').open=stage==='find';$('markpanel').open=stage==='mark';updateWorkflow();if(tools&&mobileQuery.matches)openTools();}
-function setPan(pan){$('touchmode').setAttribute('aria-pressed',String(pan));$('touchmode').textContent=pan?'Draw / edit areas':'Pan page';$('page').classList.toggle('pan',pan);}
+function setStage(stage,{tools=false}={}){currentStage=stage;if(mobileQuery.matches&&stage!=='review')setPan(stage==='find');$('findpanel').open=stage==='find';$('markpanel').open=stage==='mark';updateWorkflow();if(tools&&mobileQuery.matches)openTools();controls();}
+function setPan(pan){$('touchmode').setAttribute('aria-pressed',String(pan));$('drawmode').setAttribute('aria-pressed',String(!pan));$('page').classList.toggle('pan',pan);}
 function openTools(){if(mobileQuery.matches&&!$('mobilepanel').open)$('mobilepanel').showModal();}
 function closeTools(){if($('mobilepanel').open)$('mobilepanel').close();}
 function markMode(){closeTools();setStage('mark');setPan(false);status('Drag on the page to draw an area. Use Find to search, or open the area tools for precise coordinates.');}
@@ -171,3 +171,5 @@ mobileQuery.addEventListener('change',placeTools);placeTools();
 function scheduleFit(){clearTimeout(fitTimer);fitTimer=setTimeout(()=>{if(busy){resizeDirty=true;return;}resizeDirty=false;if($('exportdialog').open&&exportBounds&&$('exportzoom').value.startsWith('fit'))task(renderExport);else if(count&&$('zoom').value.startsWith('fit'))task(render);},180);}
 new ResizeObserver(scheduleFit).observe($('documentframe'));new ResizeObserver(()=>{if($('exportdialog').open)scheduleFit();}).observe($('exportframe'));
 window.addEventListener('resize',scheduleFit);
+
+function revealResults(){if(!searchSession)return;$('searchsettings').open=false;$('settingssummary').textContent=`Search settings · ${searchSession.spec.value||$('searchmode').selectedOptions[0].textContent}`;if(currentStage==='find'&&(!mobileQuery.matches||$('mobilepanel').open))$('findpanel').scrollIntoView({block:'start',behavior:'auto'});}

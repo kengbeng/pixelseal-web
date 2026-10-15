@@ -1,4 +1,4 @@
-# PixelSeal Web 0.5.0
+# PixelSeal Web 0.5.1
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -115,7 +115,7 @@ Source and export thumbnails load on demand and show marked-area counts. Exporte
 
 Regression checks cover native and OCR patterns, duplicate filtering, stable selection keys, coordinate mapping, encryption and permanent redaction. Browser tests cover native/scanned/mixed pages, selection preservation as results arrive, cancellation with retained results, verified pattern export and review tracking.
 
-## Version 0.5.0 interface
+## Version 0.5.1 interface
 
 The workbench uses Find → Mark → Review & export stages. Search, scan settings, marked areas, precise coordinates and help collapse independently. Results group by page, with per-page selection, PDF/OCR badges and low-confidence warnings. Clicking a match locates and highlights it without changing its selection.
 
@@ -126,3 +126,7 @@ The export preview gives the PDF most of the screen, with a narrow thumbnail rai
 Mobile uses a document-first layout, bottom stage controls and a native slide-up tools dialog. Find opens search, Mark enables drawing, and Areas opens precise tools. Locating a result closes the sheet to show the document. Scan cancellation is available both on the canvas and in the sheet. Progress announces page numbers, completion or an incomplete search without repeated identical live announcements. Incomplete-search warnings remain visible on the document and carry into export review.
 
 After changing runtime assets, run `python3 build-service-worker.py` to regenerate the offline cache version before deployment.
+
+### Interface update 0.5.1
+
+Search settings collapse after completion to make results easier to reach. A sticky selection action shows the number of matches selected, and PDF and OCR results include nearby text. The editing view labels pending redactions, offers explicit Draw and Pan modes, and uses a compact document row after opening a PDF. Completed progress bars are hidden and search status is consolidated.

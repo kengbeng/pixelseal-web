@@ -1,4 +1,4 @@
-import {searchOCRPages} from './ocr-model.js?v=0.5.0';
+import {searchOCRPages} from './ocr-model.js?v=0.5.1';
 export function patternRegex(mode,value=''){
  if(mode==='email')return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
  if(mode==='phone')return /(?:\+\d{1,3}[ .-]?)?(?:\(\d{2,4}\)[ .-]?)?(?:\d[ .-]?){7,14}\d/g;
@@ -25,7 +25,7 @@ export function searchOCR(pages,spec){
  for(const [page,words]of pages){let text='',spans=[];
   for(const word of words){if(text&&!(/[\u3400-\u9fff]$/.test(text)&&/^[\u3400-\u9fff]/.test(word.text)))text+=' ';const start=text.length;text+=word.text;spans.push({start,end:text.length,word});}
   const result=findPatternText(text,spec);limited ||= result.limited;
-  for(const hit of result.hits){const found=spans.filter(s=>s.start<hit.end&&s.end>hit.start).map(s=>s.word);if(!found.length)continue;const rects=found.map(w=>[...w.rect]);matches.push({page,rects,key:JSON.stringify(['ocr',page,rects]),source:'ocr',confidence:Math.round(Math.min(...found.map(w=>w.confidence))),text:hit.text});}
+  for(const hit of result.hits){const found=spans.filter(s=>s.start<hit.end&&s.end>hit.start).map(s=>s.word);if(!found.length)continue;const rects=found.map(w=>[...w.rect]);matches.push({page,rects,key:JSON.stringify(['ocr',page,rects]),source:'ocr',confidence:Math.round(Math.min(...found.map(w=>w.confidence))),text:hit.text,context:(hit.start>38?'…':'')+text.slice(Math.max(0,hit.start-38),hit.end+38)+(hit.end+38<text.length?'…':'')});}
  }
  return {matches,limited};
 }

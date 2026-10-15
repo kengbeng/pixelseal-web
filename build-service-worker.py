@@ -4,7 +4,7 @@ root=Path('.')
 files=['index.html','app.js','core.js','worker.js','model.js','ocr.js','ocr-model.js','search-model.js','ui-model.js','pwa.js','styles.css','manifest.webmanifest','icon.svg','favicon.svg','favicon.ico','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png','LICENSE','vendor/mupdf.js','vendor/mupdf-wasm.js','vendor/mupdf-wasm.wasm','vendor/LICENSE']
 files += [str(p) for p in sorted(Path('vendor/ocr').iterdir()) if p.is_file()]
 digest=hashlib.sha256(b''.join(p.encode()+Path(p).read_bytes() for p in files)).hexdigest()[:16]
-source='''const VERSION='0.5.0';
+source='''const VERSION='0.5.1';
 const ASSETS=__ASSETS__;
 const PREFIX='pixelseal:'+new URL(self.registration.scope).pathname+':';
 const CACHE=PREFIX+VERSION+':__DIGEST__';
