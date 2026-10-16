@@ -1,4 +1,4 @@
-# PixelSeal Web 0.5.1
+# PixelSeal Web 0.5.2
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -130,3 +130,9 @@ After changing runtime assets, run `python3 build-service-worker.py` to regenera
 ### Interface update 0.5.1
 
 Search settings collapse after completion to make results easier to reach. A sticky selection action shows the number of matches selected, and PDF and OCR results include nearby text. The editing view labels pending redactions, offers explicit Draw and Pan modes, and uses a compact document row after opening a PDF. Completed progress bars are hidden and search status is consolidated.
+
+## User guide (0.5.2)
+
+Select **Help** in the app header to open the guide without replacing the current PDF or marks. Contextual help links are available in Search tips, Precise coordinates and export review. The guide covers opening protected PDFs, PDF/OCR search, patterns, marking, verification, mobile and keyboard use, offline setup, privacy and troubleshooting.
+
+The standalone [user guide](help.html) supports printing or saving as PDF through the browser. The app caches the guide and its assets for offline use. After updates, save current work before selecting **Update app**.
