@@ -1,4 +1,4 @@
-# PixelSeal Web 0.5.2
+# PixelSeal Web 0.5.3
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -136,3 +136,7 @@ Search settings collapse after completion to make results easier to reach. A sti
 Select **Help** in the app header to open the guide without replacing the current PDF or marks. Contextual help links are available in Search tips, Precise coordinates and export review. The guide covers opening protected PDFs, PDF/OCR search, patterns, marking, verification, mobile and keyboard use, offline setup, privacy and troubleshooting.
 
 The standalone [user guide](help.html) supports printing or saving as PDF through the browser. The app caches the guide and its assets for offline use. After updates, save current work before selecting **Update app**.
+
+## Drag-and-drop (0.5.3)
+
+Drop one PDF onto the app to open it locally. The file picker and drag-and-drop use the same validation and password flow. A visible drop zone indicates availability, and non-PDF, empty and multiple-file drops are rejected before changing the document. Replacing a document with marks requires confirmation. Imports are blocked during active operations, scans and non-tool dialogs. The file input resets after selection so the same file can be reopened. App updates detect open documents regardless of how they were opened.

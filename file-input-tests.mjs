@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {singlePDF,hasPDFHeader,isFileDrag} from './file-input.js';
+const pdf={name:'report.PDF',type:'',size:100};
+assert.equal(singlePDF([pdf]),pdf);
+assert.equal(singlePDF([{name:'download',type:'application/pdf',size:10}]).type,'application/pdf');
+for(const files of [[],[pdf,pdf],[{name:'notes.txt',type:'text/plain',size:10}],[{...pdf,size:0}]])assert.throws(()=>singlePDF(files));
+assert.equal(hasPDFHeader(new TextEncoder().encode('%PDF-1.7\n')),true);
+assert.equal(hasPDFHeader(new TextEncoder().encode('\ufeff\n%PDF-1.4')),true);
+assert.equal(hasPDFHeader(new TextEncoder().encode('not a pdf')),false);
+assert.equal(hasPDFHeader(new TextEncoder().encode('x'.repeat(1024)+'%PDF-1.7')),false);
+assert.equal(isFileDrag({types:['Files']}),true);
+assert.equal(isFileDrag({types:['text/uri-list']}),false);
+assert.equal(isFileDrag(null),false);
+console.log('PASS: single PDF selection, extension/MIME fallback, empty/multiple/non-PDF rejection, PDF header preflight and file-only drag detection.');

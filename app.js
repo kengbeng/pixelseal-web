@@ -1,3 +1,4 @@
+import {singlePDF,hasPDFHeader,isFileDrag} from './file-input.js?v=0.5.3';
 import {fitScale,groupMatches,scrollTarget} from './ui-model.js?v=0.5.1';
 import {searchOCR,mergeMatches,patternRegex,pageMarkCounts} from './search-model.js?v=0.5.1';
 import {OCRController} from './ocr.js?v=0.5.1';
@@ -10,7 +11,7 @@ worker.onerror=()=>{for(let p of pending.values())p.reject(Error('The PDF engine
 const call=(type,data={})=>new Promise((resolve,reject)=>{let id=++seq;pending.set(id,{resolve,reject});worker.postMessage({id,type,...data});});
 function status(s,error=false){$('status').textContent=s;$('status').classList.toggle('error',error);if(error&&$('searchstate').dataset.state!=='incomplete')setSearchState('Attention needed','error');}
 function controls(){
- updateWorkflow();$('areatools').disabled=busy||!count;$('areacount').textContent=marks.length;$('cancelocr').hidden=!scanning;$('panelcancel').hidden=!scanning;$('panelcancel').disabled=!scanning;
+ document.body.dataset.documentOpen=String(count>0);updateWorkflow();$('areatools').disabled=busy||!count;$('areacount').textContent=marks.length;$('cancelocr').hidden=!scanning;$('panelcancel').hidden=!scanning;$('panelcancel').disabled=!scanning;
  for(let id of ['exportjump','downloadexport','closeexport','reviewedpage','exportzoom'])$(id).disabled=busy;
  $('exportprev').disabled=busy||exportPage===0;$('exportnext').disabled=busy||exportPage>=exportCount-1;
  $('clear').disabled=busy||!marks.length;$('export').disabled=busy||scanning||!marks.length;
@@ -81,7 +82,8 @@ function askPassword(filename,incorrect=false){
  });
 }
 $('showpassword').onchange=()=>{$('pdfpassword').type=$('showpassword').checked?'text':'password';};
-$('file').onchange=()=>task(async()=>{let f=$('file').files[0];if(!f)return;closeTools();setStage('find');setSearchState('Opening PDF','running');status('Opening PDF…');$('protectioninfo').hidden=true;$('filename').textContent='No document open';count=0;marks=[];collapsedGroups.clear();history.reset();ocr.reset();$('ocrprogress').hidden=true;$('ocrprogress').value=0;$('ocrinfo').textContent='Completed scans are reused for this document and scan settings.';selected=-1;matches=[];checked.clear();activeHit=-1;bounds=null;$('query').value='';$('searchinfo').textContent='Enter text or choose a pattern, then select Find.';$('page').hidden=true;$('empty').hidden=false;searchSession=null;clearThumbnails('source');let bytes=await f.arrayBuffer(),r;let password='',incorrect=false;for(;;){try{r=await call('open',{bytes,password});password='';break;}catch(e){password='';if(e.code!=='PASSWORD_REQUIRED')throw e;password=await askPassword(f.name,incorrect);if(password===null){await call('close');$('file').value='';$('filename').textContent='No document open';throw Error('Opening cancelled. Select a PDF to try again.');}incorrect=true;}}$('protectioninfo').hidden=!r.protected;name=f.name;count=r.count;page=0;$('searchsettings').open=true;$('settingssummary').textContent='Search settings';$('filename').textContent=name;await render();buildThumbnails('source',count);setSearchState('Ready to search','idle');status('Find matches or switch to Mark to draw areas.');});
+async function openFile(f){return task(async()=>{closeTools();setStage('find');setSearchState('Opening PDF','running');status('Opening PDF…');$('protectioninfo').hidden=true;$('filename').textContent='No document open';count=0;marks=[];collapsedGroups.clear();history.reset();ocr.reset();$('ocrprogress').hidden=true;$('ocrprogress').value=0;$('ocrinfo').textContent='Completed scans are reused for this document and scan settings.';selected=-1;matches=[];checked.clear();activeHit=-1;bounds=null;$('query').value='';$('searchinfo').textContent='Enter text or choose a pattern, then select Find.';$('page').hidden=true;$('empty').hidden=false;searchSession=null;clearThumbnails('source');let bytes=await f.arrayBuffer(),r;let password='',incorrect=false;for(;;){try{r=await call('open',{bytes,password});password='';break;}catch(e){password='';if(e.code!=='PASSWORD_REQUIRED')throw e;password=await askPassword(f.name,incorrect);if(password===null){await call('close');$('file').value='';$('filename').textContent='No document open';throw Error('Opening cancelled. Select a PDF to try again.');}incorrect=true;}}$('protectioninfo').hidden=!r.protected;name=f.name;count=r.count;page=0;$('searchsettings').open=true;$('settingssummary').textContent='Search settings';$('filename').textContent=name;await render();buildThumbnails('source',count);setSearchState('Ready to search','idle');status('Find matches or switch to Mark to draw areas.');});}
+
 $('prev').onclick=()=>task(async()=>{page--;selected=-1;await render();});$('next').onclick=()=>task(async()=>{page++;selected=-1;await render();});$('zoom').onchange=()=>{if(count)task(render);};
 $('undo').onclick=()=>restore('undo');$('redo').onclick=()=>restore('redo');$('clear').onclick=()=>{selected=-1;commit([],'All marks cleared. Undo restores them.');};
 function refreshSearch(message){
@@ -173,3 +175,27 @@ new ResizeObserver(scheduleFit).observe($('documentframe'));new ResizeObserver((
 window.addEventListener('resize',scheduleFit);
 
 function revealResults(){if(!searchSession)return;$('searchsettings').open=false;$('settingssummary').textContent=`Search settings · ${searchSession.spec.value||$('searchmode').selectedOptions[0].textContent}`;if(currentStage==='find'&&(!mobileQuery.matches||$('mobilepanel').open))$('findpanel').scrollIntoView({block:'start',behavior:'auto'});}
+
+let openingFile=false,dragDepth=0;
+function fileOpenBlocked(){return busy||scanning||openingFile||!!document.querySelector('dialog[open]:not(#mobilepanel)');}
+function importNotice(message){$('importnotice').textContent=message;}
+async function acceptFiles(files){
+ if(fileOpenBlocked()){importNotice('Finish the current operation or close the dialog before opening another PDF.');return;}
+ openingFile=true;
+ try{
+  const file=singlePDF(files);
+  if(!hasPDFHeader(await file.slice(0,1024).arrayBuffer()))throw Error('This file does not contain a PDF header. Choose a valid PDF.');
+  if(busy||scanning||document.querySelector('dialog[open]:not(#mobilepanel)')){importNotice('Finish the current operation or close the dialog before opening another PDF.');return;}
+  if(marks.length&&!confirm('Replace the current PDF? Its redaction marks, search results and undo history will be cleared. Download your redacted copy first if needed.'))return;
+  importNotice('');await openFile(file);
+ }catch(error){importNotice(error.message);}
+ finally{openingFile=false;}
+}
+$('file').onchange=()=>{const files=Array.from($('file').files);$('file').value='';if(files.length)acceptFiles(files);};
+function hideDrop(){dragDepth=0;$('dropzone').hidden=true;}
+function showDrop(){const blocked=fileOpenBlocked();$('droptitle').textContent=blocked?'Cannot open a PDF yet':'Drop a PDF to open';$('dropdetail').textContent=blocked?'Finish the current operation or close the dialog first.':count?'The dropped PDF will replace the current document.':'Your file stays in this browser. Nothing is uploaded.';$('dropzone').classList.toggle('blocked',blocked);$('dropzone').hidden=false;}
+document.addEventListener('dragenter',event=>{if(!isFileDrag(event.dataTransfer))return;event.preventDefault();dragDepth++;showDrop();});
+document.addEventListener('dragover',event=>{if(!isFileDrag(event.dataTransfer))return;event.preventDefault();event.dataTransfer.dropEffect=fileOpenBlocked()?'none':'copy';showDrop();});
+document.addEventListener('dragleave',event=>{if(!isFileDrag(event.dataTransfer))return;event.preventDefault();if(--dragDepth<=0||!event.relatedTarget)hideDrop();});
+document.addEventListener('drop',event=>{if(!isFileDrag(event.dataTransfer))return;event.preventDefault();hideDrop();acceptFiles(Array.from(event.dataTransfer.files||[]));});
+document.addEventListener('dragend',hideDrop);window.addEventListener('blur',hideDrop);document.addEventListener('keydown',event=>{if(event.key==='Escape')hideDrop();});
