@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const manifest=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8')),manifestURL='https://kengbeng.github.io/pixelseal-web/manifest.webmanifest';
+assert.equal(new URL(manifest.id,manifestURL).pathname,'/pixelseal-web/');
+assert.equal(new URL(manifest.start_url,manifestURL).pathname,'/pixelseal-web/');
+assert.equal(new URL(manifest.scope,manifestURL).pathname,'/pixelseal-web/');
+const sw=fs.readFileSync('sw.js','utf8'),assets=JSON.parse(sw.match(/const ASSETS=(.*);/)[1]);
+assert(assets.every(p=>!p.includes('\\')&&!p.startsWith('/')&&!p.includes('..')));
+assert.equal(new Set(assets).size,assets.length);
+for(const asset of assets)assert(fs.existsSync(asset),asset);
+assert(fs.readFileSync('build-service-worker.py','utf8').includes('p.as_posix()'));
+assert(sw.includes("name.startsWith(PREFIX)"));
+console.log('PASS: repository-scoped manifest identity/start/scope, portable relative cache URLs, asset existence and scoped cache cleanup.');
