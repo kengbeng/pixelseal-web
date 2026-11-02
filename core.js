@@ -34,8 +34,8 @@ export function exportPDF(bytes,marks,password='') {
   return data;
  }finally{source.destroy();output.destroy();}
 }
-export function verifyPDF(bytes,marks){
- const doc=openPDF(bytes);
+export function verifyPDF(bytes,marks,password=''){
+ const doc=openPDF(bytes,password);
  try{
   for(const index of new Set(marks.map(m=>m.page))){
    const page=doc.loadPage(index),regions=marks.filter(m=>m.page===index).map(m=>m.rect);
@@ -96,4 +96,21 @@ export function searchPDF(doc,query,pageNumbers){
   }finally{page.destroy();}
  }
  return {matches,limited};
+}
+
+export function validateOutputPassword(password){
+ if(typeof password!=='string'||!password.trim())throw Error('Enter an output password.');
+ if(/[\u0000-\u001f\u007f]/.test(password))throw Error('The password cannot contain control characters.');
+ if(new TextEncoder().encode(password).length>127)throw Error('Use a password of at most 127 UTF-8 bytes.');
+}
+export function protectPDF(bytes,marks,password){
+ validateOutputPassword(password);verifyPDF(bytes,marks);
+ const doc=openPDF(bytes);let output;
+ try{
+  const owner=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
+  const buffer=doc.saveToBuffer(JSON.stringify({encrypt:'aes-256','user-password':password,'owner-password':owner,garbage:4,compress:true}));
+  try{output=new Uint8Array(buffer.asUint8Array());}finally{buffer.destroy();}
+ }finally{doc.destroy();}
+ const locked=new mupdf.PDFDocument(output);try{if(!locked.needsPassword())throw Error('Password protection could not be verified.');if(locked.authenticatePassword(''))throw Error('The protected PDF opens without a password.');}finally{locked.destroy();}
+ verifyPDF(output,marks,password);return output;
 }

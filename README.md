@@ -1,4 +1,4 @@
-# PixelSeal Web 0.5.4
+# PixelSeal Web 0.5.5
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -144,3 +144,7 @@ Drop one PDF onto the app to open it locally. The file picker and drag-and-drop 
 ## Installed app status (0.5.4)
 
 Installed app windows show a non-interactive Installed indicator. When a new service worker is ready, Update app replaces that indicator. Standalone/fullscreen display mode, Safari standalone mode and the appinstalled event determine the status. A normal browser tab cannot reliably detect an app installed elsewhere. Returning to the app checks for updates while online, at most once per minute.
+
+## Output password protection (0.5.5)
+
+Export review offers optional AES-256 password protection. Enter and confirm a password, then use Protect & download PDF. Unencrypted export remains the default. Redactions are verified before encryption; encrypted output must require a password and pass redaction verification after unlocking. Output passwords support punctuation and Unicode up to 127 UTF-8 bytes, excluding control characters. Fields clear after a download attempt or closing review; passwords are not persisted.
