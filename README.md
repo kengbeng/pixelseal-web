@@ -1,4 +1,4 @@
-# PixelSeal Web 0.5.6
+# PixelSeal Web 0.6.0
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -152,3 +152,7 @@ Export review offers optional AES-256 password protection. Enter and confirm a p
 ## App identity and Windows build paths (0.5.6)
 
 Restores the 27 October app identity fix in the local source: the manifest ID is /pixelseal-web/. The cache builder uses as_posix() for discovered assets so Windows builds produce forward-slash URLs. Keeps drag-and-drop, installed/update status and AES-256 output protection.
+
+## Review workflow (0.6.0)
+
+The footer presents one primary stage action, with separate selected-match and marked-area counts. Search snippets highlight literal matched text safely, with previous/next navigation in page order. Export review shows the original and saved output around the selected area at the same scale. The comparison is generated locally from the source and verified output, clears when review closes, and is not written into the exported PDF. Pages without marks show an explanation. Compare area can be hidden to enlarge the output preview.

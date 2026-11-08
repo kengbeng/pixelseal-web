@@ -1,5 +1,6 @@
-import {findPatternText} from './search-model.js?v=0.5.5';
-import {mupdf,openPDF,exportPDF,searchPDF,protectPDF} from './core.js?v=0.5.5';
+import {renderAreaComparison} from './comparison.js?v=0.6.0';
+import {findPatternText} from './search-model.js?v=0.6.0';
+import {mupdf,openPDF,exportPDF,searchPDF,protectPDF} from './core.js?v=0.6.0';
 let doc,bytes,password='',exported,exportData,exportMarks;
 self.onmessage=({data})=>{
  const {id,type}=data;
@@ -32,6 +33,7 @@ self.onmessage=({data})=>{
    if(!doc)throw Error('Open a PDF first.');const page=doc.loadPage(data.page);
    try{const bounds=page.getBounds(),width=bounds[2]-bounds[0],height=bounds[3]-bounds[1],scale=Math.min(3,6000/Math.max(width,height),Math.sqrt(16000000/(width*height)));const rotation=Number(data.rotation)||0,matrix=rotation===90?[0,scale,-scale,0,0,0]:rotation===180?[-scale,0,0,-scale,0,0]:rotation===270?[0,-scale,scale,0,0,0]:[scale,0,0,scale,0,0];const pix=page.toPixmap(matrix,mupdf.ColorSpace.DeviceRGB,false,true);try{result={bounds,scale,matrix,origin:[pix.getX(),pix.getY()],png:new Uint8Array(pix.asPNG())};}finally{pix.destroy();}}finally{page.destroy();}
   }else if(type==='export'){const output=exportPDF(bytes,data.marks,password);exported?.destroy();exported=openPDF(output);exportData=output;exportMarks=data.marks;result={bytes:output,count:exported.countPages()};}
+  else if(type==='compareArea'){const mark=exportMarks?.[data.areaIndex];if(!doc||!exported||!mark)throw Error('Select a marked area first.');result=renderAreaComparison(doc,exported,mark);}
   else if(type==='protectExport'){if(!exportData)throw Error('Prepare an export first.');result={bytes:protectPDF(exportData,exportMarks,data.password)};}
   else if(type==='clearExport'){exported?.destroy();exported=exportData=exportMarks=undefined;result={cleared:true};}
   else if(type==='exportRender'){if(!exported)throw Error('Prepare an export first.');const page=exported.loadPage(data.page);try{const pix=page.toPixmap([data.scale||1,0,0,data.scale||1,0,0],mupdf.ColorSpace.DeviceRGB,false,true);try{result={bounds:page.getBounds(),png:new Uint8Array(pix.asPNG())};}finally{pix.destroy();}}finally{page.destroy();}}
