@@ -1,4 +1,4 @@
-# PixelSeal Web 0.6.1
+# PixelSeal Web 0.6.2
 
 PixelSeal Web is a local browser app for manual and search-assisted PDF redaction. All runtime dependencies are included. It runs without internet access after downloading and extracting this folder. It does not upload PDFs.
 
@@ -160,3 +160,7 @@ The footer presents one primary stage action, with separate selected-match and m
 ## Unified installation control (0.6.1)
 
 One header button shows Install, Updating…, Update or Installed. Installed opens a status popup with version and manual Check for updates. Update checks report offline, current, downloading, ready and failure states. Loading an update still confirms before clearing an open document. App identity and service-worker scope remain repository-specific.
+
+## Header layout (0.6.2)
+
+Installed retains a visible button border. An accessible Help icon sits immediately to its left. Offline/OCR readiness appears in the document status strip below the toolbar, including on small screens, rather than between the header controls.
